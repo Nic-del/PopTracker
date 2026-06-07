@@ -1571,9 +1571,9 @@ void PopTracker::showBroadcast()
         pos += Ui::Size{_win->getWidth()/2, _win->getHeight()/2 - 32};
         _broadcast->setCenterPosition(pos); // this will reposition the window after rendering
         
-        // Apply chroma key transparency (Magenta) if requested via CLI
+        // Apply chroma key transparency (Almost Black) if requested via CLI
         if (_args.value("broadcast_transparent", false)) {
-            _broadcast->setChromaKey({255, 0, 255});
+            _broadcast->setChromaKey({1, 1, 1});
         }
     }
 #endif
