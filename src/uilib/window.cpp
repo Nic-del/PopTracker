@@ -241,4 +241,23 @@ bool Window::isAccelerated()
     return false;
 }
 
+// Configures the window to use a specific color as transparent (chroma keying) on Windows
+void Window::setChromaKey(Color color)
+{
+#if defined WIN32 || defined _WIN32
+    SDL_SysWMinfo wmInfo;
+    SDL_VERSION(&wmInfo.version);
+    if (SDL_GetWindowWMInfo(_win, &wmInfo)) {
+        HWND hWnd = wmInfo.info.win.window;
+        // WS_EX_LAYERED is required to set window attributes like opacity or chroma key
+        SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
+        // Make the specified background color transparent
+        SetLayeredWindowAttributes(hWnd, RGB(color.r, color.g, color.b), 0, LWA_COLORKEY);
+        setBackground(color);
+    }
+#else
+    (void)color;
+#endif
+}
+
 } // namsepace

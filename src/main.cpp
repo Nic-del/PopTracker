@@ -54,6 +54,14 @@ int main(int argc, char** argv)
     const char* packVariant = nullptr;
     bool updateAttempt = false;
     bool updateSuccess = false;
+    // CLI arguments for broadcast and Archipelago connection
+    bool broadcast = false;
+    bool broadcastTransparent = false;
+    const char* apUri = nullptr;
+    const char* apSlot = nullptr;
+    const char* apPassword = nullptr;
+
+    std::string packPathStr;
 
     while (argc > 1) {
         if (strcasecmp("--console", argv[1])==0) {
@@ -118,8 +126,41 @@ int main(int argc, char** argv)
         } else if (strcasecmp("--updated", argv[1]) == 0) {
             updateAttempt = true;
             updateSuccess = true;
-        } else if (argc==2) {
-            packPath = argv[1];
+        } else if (strcasecmp("--broadcast", argv[1]) == 0) {
+            broadcast = true;
+        } else if (strcasecmp("--broadcast-transparent", argv[1]) == 0) {
+            broadcastTransparent = true;
+            broadcast = true;
+        } else if (strcasecmp("--ap-uri", argv[1]) == 0) {
+            if (argc <= 2) {
+                badArg = true;
+                break;
+            }
+            apUri = argv[2];
+            argv++;
+            argc--;
+        } else if (strcasecmp("--ap-slot", argv[1]) == 0) {
+            if (argc <= 2) {
+                badArg = true;
+                break;
+            }
+            apSlot = argv[2];
+            argv++;
+            argc--;
+        } else if (strcasecmp("--ap-password", argv[1]) == 0) {
+            if (argc <= 2) {
+                badArg = true;
+                break;
+            }
+            apPassword = argv[2];
+            argv++;
+            argc--;
+        } else if (argv[1][0] != '-') {
+            if (!packPathStr.empty()) {
+                packPathStr += " ";
+            }
+            packPathStr += argv[1];
+            packPath = packPathStr.c_str();
         } else {
             badArg = true;
             break;
@@ -168,6 +209,11 @@ int main(int argc, char** argv)
                "  Action args:\n"
                "    --pack-variant <variant>: try to load this variant\n"
                "    --pack-version <version>: try to load this version\n"
+               "    --ap-uri <host:port>: auto-connect to this Archipelago server\n"
+               "    --ap-slot <slot>: slot for Archipelago auto-connect\n"
+               "    --ap-password <password>: password for Archipelago auto-connect\n"
+               "    --broadcast: open broadcast window on startup\n"
+               "    --broadcast-transparent: open broadcast window with transparency\n"
                "\n", appName);
         return badArg ? 1 : 0;
     }
@@ -194,6 +240,21 @@ int main(int argc, char** argv)
         args["update"] = {
             { "success", updateSuccess },
         };
+    }
+    if (broadcast) {
+        args["broadcast"] = true;
+    }
+    if (broadcastTransparent) {
+        args["broadcast_transparent"] = true;
+    }
+    if (apUri) {
+        args["ap_uri"] = apUri;
+    }
+    if (apSlot) {
+        args["ap_slot"] = apSlot;
+    }
+    if (apPassword) {
+        args["ap_password"] = apPassword;
     }
 
     PopTracker popTracker(argc, argv, cli, args);

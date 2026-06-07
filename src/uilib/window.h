@@ -45,6 +45,8 @@ public:
     virtual void resize(Size size);
     void Raise();
     void setTitle(const std::string& title);
+    // Sets window chroma key transparency (Windows only)
+    void setChromaKey(Color color);
     
     virtual const Position& getPosition() const override;
     virtual void setPosition(const Position& pos) override;

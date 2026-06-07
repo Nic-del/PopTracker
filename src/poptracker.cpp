@@ -1408,6 +1408,43 @@ bool PopTracker::loadTracker(const fs::path& pack, const std::string& variant, b
         printf("Pack update available!\n");
     });
 
+    // Auto-connect to Archipelago if command line arguments were provided
+    if (auto at = _scriptHost->getAutoTracker()) {
+        const auto itAPUri = _args.find("ap_uri");
+        const auto itAPSlot = _args.find("ap_slot");
+        if (itAPUri != _args.end() && itAPSlot != _args.end()) {
+            std::string uri = itAPUri.value().get<std::string>();
+            std::string slot = itAPSlot.value().get<std::string>();
+            std::string password = _args.value("ap_password", "");
+            int apIndex = -1;
+            // Find index of the Archipelago auto-tracker backend
+            for (int i = 0; ; i++) {
+                if (at->getState(i) == AutoTracker::State::Unavailable)
+                    break;
+                if (at->getName(i) == "AP") {
+                    apIndex = i;
+                    break;
+                }
+            }
+            if (apIndex != -1) {
+                if (at->enable(apIndex, uri, slot, password)) {
+                    _autoTrackerAllDisabled = false;
+                    _autoTrackerDisabled["AP"] = false;
+                    _atUri = uri;
+                    _atSlot = slot;
+                    _atPassword = password;
+                    _config["at_uri"] = _atUri;
+                    _config["at_slot"] = _atSlot;
+                }
+            }
+        }
+    }
+
+    // Auto-open broadcast window if requested via CLI
+    if (_args.value("broadcast", false)) {
+        showBroadcast();
+    }
+
     return res;
 }
 
@@ -1533,6 +1570,11 @@ void PopTracker::showBroadcast()
         _broadcast->setTracker(_tracker);
         pos += Ui::Size{_win->getWidth()/2, _win->getHeight()/2 - 32};
         _broadcast->setCenterPosition(pos); // this will reposition the window after rendering
+        
+        // Apply chroma key transparency (Magenta) if requested via CLI
+        if (_args.value("broadcast_transparent", false)) {
+            _broadcast->setChromaKey({255, 0, 255});
+        }
     }
 #endif
 }
